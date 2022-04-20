@@ -1,0 +1,3 @@
+Sudoku is a grid comprising 9 columns and 9 rows, additionally subdivided into 9 smaller 3x3 grids.
+The grid is initially filled with a number of clues, depending on the level of difficulty of the board.
+The goal is to fill the grid in such a way that each column, row and sub-grid contains exactly one instance of digits 1 through 9.
