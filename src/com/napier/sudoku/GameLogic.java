@@ -40,8 +40,10 @@ public class GameLogic {
             case NEW_GAME:
                 // start a new game according to level of difficulty
                 int gameDifficulty = getGameDifficulty(scanner);
-                System.out.println("Starting a new game");
-                startGame();
+                if(gameDifficulty != 0) {
+                    System.out.println("Starting a new game");
+                    startGame(gameDifficulty);
+                }
                 break;
             case LOAD_GAME:
                 System.out.println("Loading a saved game");
@@ -123,9 +125,21 @@ public class GameLogic {
     /**
      * Starts a new sudoku game
      */
-    private static void startGame() {
+    private static void startGame(int gameDifficulty) {
         Board board = new Board();
+        switch(gameDifficulty) {
+            case 1:
+                board.generateEasyBoard();
+                break;
+            case 2:
+                board.generateMediumBoard();
+                break;
+            case 3:
+                board.generateHardBoard();
+                break;
+        }
         board.printBoard();
+
     }
 
     /**
