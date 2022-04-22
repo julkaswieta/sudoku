@@ -1,9 +1,13 @@
 package com.napier.sudoku;
 
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.Scanner;
 
+/**
+ * Main class with driver code for the game
+ */
 public class GameLogic {
     // user action codes
     private static final int EXIT = 0;
@@ -14,6 +18,9 @@ public class GameLogic {
     private static final int MEDIUM = 2;
     private static final int HARD = 3;
 
+    /**
+     * Driver code
+     */
     public static void main(String[] args) {
         System.out.println("Hello, sudoku master!");
         Scanner scanner = new Scanner(System.in);
@@ -42,7 +49,7 @@ public class GameLogic {
                 int gameDifficulty = getGameDifficulty(scanner);
                 if(gameDifficulty != 0) {
                     System.out.println("Starting a new game");
-                    startGame(gameDifficulty);
+                    startGame(gameDifficulty, scanner);
                 }
                 break;
             case LOAD_GAME:
@@ -125,21 +132,22 @@ public class GameLogic {
     /**
      * Starts a new sudoku game
      */
-    private static void startGame(int gameDifficulty) {
+    private static void startGame(int gameDifficulty, Scanner scanner) {
         Board board = new Board();
         switch(gameDifficulty) {
             case 1:
                 board.generateEasyBoard();
+                playGame(board, scanner);
                 break;
             case 2:
                 board.generateMediumBoard();
+                playGame(board, scanner);
                 break;
             case 3:
                 board.generateHardBoard();
+                playGame(board, scanner);
                 break;
         }
-        board.printBoard();
-
     }
 
     /**
@@ -159,5 +167,101 @@ public class GameLogic {
             System.out.println("Could not print the rules");
             return false;
         }
+    }
+
+    private static void playGame(Board board, Scanner scanner) {
+        // ask if ready to play
+        System.out.println("Press Enter to start the game");
+        // once key is pressed, the timer will start
+        try {
+            System.in.read();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        printCommandsAndBoard(board);
+
+        System.out.println("\nTo enter a value, first, enter the coordinates of the cell to print, and then the value. You cannot modify cells that are given.");
+        System.out.println("To choose an option from the menu above, type the code letter either in the coordinates section or the value section.");
+        System.out.println("Format of the coordinates: \"row column\"");
+
+        // keep asking the user to do something until there are no empty cells in the board
+        while(!board.isSolved()) {
+
+
+
+            /*
+            boolean valid = false;
+            while(!valid) {
+                System.out.print("Cell coordinates: ");
+                int row = -1;
+                int column = -1;
+                String line = "";
+                // first, check if an option is not selected
+                try {
+                    line = scanner.next();
+                }
+                catch (Exception ex) {
+                    System.out.println("Invalid input provided. Please try again.");
+                    scanner.next();
+                }
+
+                if(!line.isEmpty()) {
+                    try {
+                        String[] split = line.split(" ");
+                        row = Integer.valueOf(split[0]);
+                        column = Integer.valueOf(split[1]);
+                        if(row >= 1 && row <= 9 && column >= 1 && column <= 9) {
+                            valid = true;
+                        }
+                        else {
+                            System.out.println("Invalid coordinates provided. Please try again.");
+                        }
+                    }
+                    catch (Exception ex) {
+                        System.out.println("Something went wrong. Please try again.");
+                    }
+                }
+
+                 */
+
+
+            }
+            /*
+            boolean validValue = false;
+            while(!validValue) {
+                System.out.print("Value to enter: ");
+                int value = -1;
+                try {
+                    value = scanner.nextInt();
+                }
+                catch (Exception ex) {
+                    System.out.println("Invalid value provided. Please try again.");
+                    scanner.next();
+                }
+
+                // validate the move and store it in the board
+                if(value >= 1 && value <= 9) {
+                    validValue = true;
+                }
+                else {
+                    System.out.println("Invalid value provided. Please try again.");
+                }
+            }
+
+
+        }
+             */
+
+
+    }
+
+    private static void printCommandsAndBoard(Board board) {
+        // print the playing board and commands
+        String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help\n";
+        String line = "-----------------------------------------------------------------------";
+        System.out.println(line + "\n" + commands + line);
+
+        board.printBoard();
     }
 }

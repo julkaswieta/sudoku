@@ -3,7 +3,9 @@ package com.napier.sudoku;
 import java.util.*;
 
 public class Board {
-    int[][] board; // 2D array to store the board
+    int[][] board; // 2D array to store the board to play
+    int[][] completeBoard; // original board to compare against
+    int[][] initialBoard;
     String[][] possibleValues; // 2D array to store all possible values for each cell
     int columns;
     int rows;
@@ -13,13 +15,18 @@ public class Board {
         this.columns = 9;
         this.rows = 9;
         this.board = new int[rows][columns];
+        this.completeBoard = new int[rows][columns];
+        this.initialBoard = new int[rows][columns];
         this.possibleValues = new String[rows][columns];
     }
 
+    /**
+     * Prints the entire sudoku board to the console
+     */
     public void printBoard() {
         int rowsCounter = 1;
         // print columns numbering
-        String columnNumbering = "    1 2 3   4 5 6   7 8 9 \n\n";
+        String columnNumbering = "       1 2 3   4 5 6   7 8 9 \n\n";
         System.out.print(columnNumbering);
 
         // print the grid
@@ -27,7 +34,7 @@ public class Board {
             if(i % 3 == 0 && i != 0) {
                 System.out.print("\n");
             }
-            System.out.print(rowsCounter++ + " ");  // print row number
+            System.out.print(rowsCounter++ + "    ");  // print row number
 
             for (int j = 0; j < columns; j++) {
                 if(j % 3 == 0) {
@@ -44,35 +51,90 @@ public class Board {
         }
     }
 
+    /**
+     * Helper function
+     */
+    public void printOriginal() {
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                System.out.print(completeBoard[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    /**
+     * Helper function
+     */
+    public void printInitial() {
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                System.out.print(initialBoard[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    /**
+     * Generates a ready-to-play easy sudoku board
+     */
     public void generateEasyBoard() {
-        // generate a number of empty cells between 40-45
-        Random rand = new Random();
-        int empty = rand.nextInt(40, 46);  // upper is exclusive, lower inclusive
-        this.emptyCells = empty;
-        generateSudoku();
-        determineEmptyCells(empty);
-
+        System.out.println("Preparing an easy board...");
+        try {
+            // generate a number of empty cells between 40-45
+            Random rand = new Random();
+            int empty = rand.nextInt(40, 46);  // upper is exclusive, lower inclusive
+            this.emptyCells = empty;
+            generateSudoku();
+            determineEmptyCells(empty);
+        }
+        catch (Exception ex) {
+            System.out.println("Something went wrong. Please try again.");
+        }
 
     }
 
+    /**
+     * Generates a ready-to-play medium sudoku board
+     */
     public void generateMediumBoard() {
-        // generate a number of empty cells between 46-49
-        Random rand = new Random();
-        int empty = rand.nextInt(46, 50);  // upper is exclusive, lower inclusive
-        this.emptyCells = empty;
-        generateSudoku();
-        determineEmptyCells(empty);
+        try {
+            System.out.println("Preparing a medium board...");
+            // generate a number of empty cells between 46-49
+            Random rand = new Random();
+            int empty = rand.nextInt(46, 50);  // upper is exclusive, lower inclusive
+            this.emptyCells = empty;
+            generateSudoku();
+            determineEmptyCells(empty);
+        }
+        catch (Exception ex) {
+            System.out.println("Something went wrong. Please try again.");
+        }
+
     }
 
+    /**
+     * Generates a ready-to-play hard sudoku board
+     */
     public void generateHardBoard() {
-        // generate a number of empty cells between 50-53
-        Random rand = new Random();
-        int empty = rand.nextInt(50, 54);  // upper is exclusive, lower inclusive
-        this.emptyCells = empty;
-        generateSudoku();
-        determineEmptyCells(empty);
+        try {
+            System.out.println("Preparing a hard board...");
+            // generate a number of empty cells between 50-53
+            Random rand = new Random();
+            int empty = rand.nextInt(50, 54);  // upper is exclusive, lower inclusive
+            this.emptyCells = empty;
+            generateSudoku();
+            determineEmptyCells(empty);
+        }
+        catch (Exception ex) {
+            System.out.println("Something went wrong. Please try again.");
+        }
+
     }
 
+    /**
+     * Generates a full sudoku board
+     */
     private void generateSudoku() {
         // initialise all possible values to be all possible
         for (int r = 0; r < rows; r++) {
@@ -82,7 +144,7 @@ public class Board {
         }
         // populate the cells by using backtracking algorithm to solve the board
         try {
-            solvePuzzle();
+            populateBoard();
         }
         catch (Exception ex) {
             // print an error message if something goes wrong
@@ -93,7 +155,7 @@ public class Board {
     /**
      * Backtracking method for populating the whole board
      */
-    private boolean solvePuzzle() {
+    private boolean populateBoard() {
         boolean solved = false;
         String cellLeft = cellsLeftToFill();
         // first, check if there are any cells left to fill
@@ -113,12 +175,16 @@ public class Board {
                 if(isStepPossible(row, column, Integer.valueOf(value))) {
                     // if safe, assign the value to the cell
                     board[row][column] = Integer.valueOf(value);
-                    if(solvePuzzle()) {
+                    completeBoard[row][column] = Integer.valueOf(value);
+                    initialBoard[row][column] = Integer.valueOf(value);
+                    if(populateBoard()) {
                         return true;
                     }
                     else {
                         // else, empty the cell
                         board[row][column] = 0;
+                        completeBoard[row][column] = 0;
+                        initialBoard[row][column] = 0;
                         // remove the possible value for this cell
                         if(possibleValues[row][column].contains(value)) {
                             possibleValues[row][column].replace(value, "");
@@ -270,6 +336,11 @@ public class Board {
         return shuffledValues;
     }
 
+    /**
+     * Generates a given number of empty cell coordinates and erases them from the board
+     * @param emptyNumber   number of cells to empty
+     * @return  an array with the cells' coordinates
+     */
     private String[] determineEmptyCells(int emptyNumber) {
         String[] emptyCells = new String[emptyNumber];
         Random rand = new Random();
@@ -302,12 +373,26 @@ public class Board {
                     emptyCells[i] = String.valueOf(row);
                     emptyCells[i] += String.valueOf(column);
                     board[row][column] = 0;
+                    initialBoard[row][column] = 0;
                     // reflect the cell to the bottom half of the board
                     emptyCells[(emptyNumber - 1 - i)] = String.valueOf(8-row) + String.valueOf(8-column);
                     board[8-row][8-column] = 0;
+                    initialBoard[8-row][8-column] = 0;
                 }
             }
         }
         return emptyCells;
+    }
+
+    public boolean isSolved() {
+        boolean solved = true;
+        for(int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
+                if(board[i][j] == 0) {
+                    solved = false;
+                }
+            }
+        }
+        return solved;
     }
 }
