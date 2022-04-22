@@ -181,12 +181,17 @@ public class GameLogic {
 
         printCommandsAndBoard(board);
 
-        System.out.println("\nTo enter a value, first, enter the coordinates of the cell to print, and then the value. You cannot modify cells that are given.");
-        System.out.println("To choose an option from the menu above, type the code letter either in the coordinates section or the value section.");
         System.out.println("Format of the coordinates: \"row column\"");
 
         // keep asking the user to do something until there are no empty cells in the board
         while(!board.isSolved()) {
+            // get the first letter that the user types
+            System.out.println("Choose your next action");
+            boolean validChoice = false;
+            while(!validChoice) {
+                char choice  = scanner.next().charAt(0);
+                validChoice = actOnGameChoice(choice);
+            }
 
 
 
@@ -256,9 +261,62 @@ public class GameLogic {
 
     }
 
+    private static boolean actOnGameChoice(char choice) {
+        switch(choice) {
+            case 'E':
+            case 'e':
+                System.out.println("Chosen: E");
+                // exit to main menu
+                return true;
+            case 'V':
+            case 'v':
+                System.out.println("Chosen: V");
+                // enter a value
+                return true;
+            case 'U':
+            case 'u':
+                System.out.println("Chosen: U");
+                // undo a move
+                return true;
+            case 'R':
+            case 'r':
+                System.out.println("Chosen: R");
+                // redo a move
+                return true;
+            case 'P':
+            case 'p':
+                System.out.println("Chosen: P");
+                // replay from beginning
+                return true;
+            case 'C':
+            case 'c':
+                System.out.println("Chosen: C");
+                // fill one random cell
+                return true;
+            case 'D':
+            case 'd':
+                System.out.println("Chosen: D");
+                // print how many of which number is left to be filled
+                return true;
+            case 'S':
+            case 's':
+                System.out.println("Chosen: S");
+                // save to disk
+                return true;
+            case 'H':
+            case 'h':
+                System.out.println("Chosen: H");
+                // print help
+                return true;
+            default:
+                System.out.println("Invalid value specified. Please try again.");
+                return false;
+        }
+    }
+
     private static void printCommandsAndBoard(Board board) {
         // print the playing board and commands
-        String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help\n";
+        String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value";
         String line = "-----------------------------------------------------------------------";
         System.out.println(line + "\n" + commands + line);
 
