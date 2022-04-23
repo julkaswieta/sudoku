@@ -3,7 +3,10 @@ package com.napier.sudoku;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.Stack;
 
 /**
  * Main class with driver code for the game
@@ -17,6 +20,11 @@ public class GameLogic {
     private static final int EASY = 1;
     private static final int MEDIUM = 2;
     private static final int HARD = 3;
+
+    private static Board board;
+    private static Stack<String> moves;
+    private static Stack<String> undoneMoves;
+    private static Queue<String> movesQueue;
 
     /**
      * Driver code
@@ -131,22 +139,26 @@ public class GameLogic {
     }
 
     /**
-     * Starts a new sudoku game
+     * Starts a new sudoku game and initialises board and stacks
      */
     private static void startGame(int gameDifficulty, Scanner scanner) {
-        Board board = new Board();
+        board = new Board();
+        moves = new Stack<>();
+        undoneMoves = new Stack<>();
+        movesQueue = new LinkedList<>();
+
         switch(gameDifficulty) {
             case 1:
                 board.generateEasyBoard();
-                playGame(board, scanner);
+                playGame(scanner);
                 break;
             case 2:
                 board.generateMediumBoard();
-                playGame(board, scanner);
+                playGame(scanner);
                 break;
             case 3:
                 board.generateHardBoard();
-                playGame(board, scanner);
+                playGame(scanner);
                 break;
         }
     }
@@ -170,7 +182,7 @@ public class GameLogic {
         }
     }
 
-    private static void playGame(Board board, Scanner scanner) {
+    private static void playGame(Scanner scanner) {
         // ask if ready to play
         System.out.println("Press Enter to start the game");
         // once key is pressed, the timer will start
@@ -180,7 +192,7 @@ public class GameLogic {
             ex.printStackTrace();
         }
 
-        printCommandsAndBoard(board);
+        printCommandsAndBoard();
 
         System.out.println("Format of the coordinates: \"row column\"");
 
@@ -192,7 +204,7 @@ public class GameLogic {
             char choice = '0';
             while (!validChoice) {
                 choice = scanner.next().charAt(0);
-                validChoice = actOnGameChoice(choice, scanner, board);
+                validChoice = actOnGameChoice(choice, scanner);
                 scanner.nextLine();
             }
             if(choice == 'E' || choice == 'e') {
@@ -223,89 +235,45 @@ public class GameLogic {
      * Perform actions based on user choice during gameplay
      * @param choice    choice code
      * @param scanner   scanner for scanning input
-     * @param board     board to operate on
      * @return  if successful
      */
-    private static boolean actOnGameChoice(char choice, Scanner scanner, Board board) {
+    private static boolean actOnGameChoice(char choice, Scanner scanner) {
         switch(choice) {
             case 'E':
             case 'e':
-                System.out.println("Chosen: E");
-                // exit to main menu
+                // exit to main menu handled in the calling method
                 return true;
             case 'V':
             case 'v':
-                // ask for coordinates
-                int row = -1;
-                int column = -1;
-                boolean incorrectCoordinates = true;
-                while(incorrectCoordinates) {
-                    try {
-                        System.out.print("Enter coordinates: ");
-                        row = scanner.nextInt();
-                        column = scanner.nextInt();
-                    }
-                    catch (Exception ex) {
-                        System.out.println("Invalid coordinates provided. Please try again.");
-                        scanner.nextLine();
-                        continue;
-                    }
-                    if(row != -1 && column != -1) {
-                        if(row < 1 || row > 9 || column < 1 || column > 9) {
-                            System.out.println("Coordinates must be in range 1-9");
-                        }
-                        else {
-                            incorrectCoordinates = false;
-                        }
-                    }
-                    else {
-                        System.out.println("Coordinates must be in range 1-9");
-                    }
-                }
-                // ask for a value
-                int value = -1;
-                boolean incorrectValue = true;
-                while (incorrectValue) {
-                    try {
-                        System.out.print("Enter value: ");
-                        value = scanner.nextInt();
-                    }
-                    catch (Exception ex) {
-                        System.out.println("Invalid value provided. Please try again.");
-                        scanner.nextLine();
-                        continue;
-                    }
-                    if(value != -1) {
-                        if (value < 1 || value > 9) {
-                            System.out.println("Value must be in range 1-9");
-                        }
-                        else{
-                            incorrectValue = false;
-                        }
-                    }
-                    else {
-                        System.out.println("Value must be in range 1-9");
-                    }
-                }
-                // insert the coordinates into the board
-                if(board.insertValue(row, column, value)) {
-                    printCommandsAndBoard(board);
+                // get the coordinates and value to modify
+                int[] rowColumn= askForCoordinates(scanner);
+                int row = rowColumn[0];
+                int column = rowColumn[1];
+                int value = askForValue(scanner);
+
+                // insert the value into the board
+                int initialValue = board.insertValue(row, column, value);
+                if(initialValue != -1) {
+                    // push the move onto the moves stack and store in the moves queue
+                    printCommandsAndBoard();
+                    moves.push(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
+                    movesQueue.add(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
                 }
                 return true;
             case 'U':
             case 'u':
-                System.out.println("Chosen: U");
                 // undo a move
+                undoMove();
                 return true;
             case 'R':
             case 'r':
-                System.out.println("Chosen: R");
                 // redo a move
+                redoMove();
                 return true;
             case 'P':
             case 'p':
-                System.out.println("Chosen: P");
                 // replay from beginning
+                replayAllMoves(scanner);
                 return true;
             case 'C':
             case 'c':
@@ -333,12 +301,220 @@ public class GameLogic {
         }
     }
 
-    private static void printCommandsAndBoard(Board board) {
+
+
+    private static int[] askForCoordinates(Scanner scanner) {
+        // ask for coordinates
+        int row = -1;
+        int column = -1;
+        boolean incorrectCoordinates = true;
+        while(incorrectCoordinates) {
+            try {
+                System.out.print("Enter coordinates: ");
+                row = scanner.nextInt();
+                column = scanner.nextInt();
+            }
+            catch (Exception ex) {
+                System.out.println("Invalid coordinates provided. Please try again.");
+                scanner.nextLine();
+                continue;
+            }
+            if(row != -1 && column != -1) {
+                if(row < 1 || row > 9 || column < 1 || column > 9) {
+                    System.out.println("Coordinates must be in range 1-9");
+                }
+                else {
+                    incorrectCoordinates = false;
+                }
+            }
+            else {
+                System.out.println("Coordinates must be in range 1-9");
+            }
+        }
+        return new int[]{row, column};
+    }
+
+    private static int askForValue(Scanner scanner) {
+        // ask for a value
+        int value = -1;
+        boolean incorrectValue = true;
+        while (incorrectValue) {
+            try {
+                System.out.print("Enter value: ");
+                value = scanner.nextInt();
+            }
+            catch (Exception ex) {
+                System.out.println("Invalid value provided. Please try again.");
+                scanner.nextLine();
+                continue;
+            }
+            if(value != -1) {
+                if (value < 1 || value > 9) {
+                    System.out.println("Value must be in range 1-9");
+                }
+                else{
+                    incorrectValue = false;
+                }
+            }
+            else {
+                System.out.println("Value must be in range 1-9");
+            }
+        }
+        return value;
+    }
+
+    /**
+     * Undoes the last move the player made if any moves made
+     */
+    private static void undoMove() {
+        // check if there were any moves made
+        if(moves.empty()) {
+            System.out.println("No moves to undo");
+        }
+        else {
+            String lastMove = moves.pop();
+            String[] values = lastMove.split("");
+            int row = Integer.valueOf(values[0]);
+            int column = Integer.valueOf(values[1]);
+            int initialValue = Integer.valueOf(values[2]);
+
+            if(board.insertValue(row, column, initialValue) != -1) {
+                System.out.println("Move undone");
+                // push the undone move to the undone moves stack
+                // new value becomes initial value and vice versa
+                lastMove = values[0] + values[1] + values[3] + values[2];
+                undoneMoves.push(lastMove);
+                // store in the moves queue
+                movesQueue.add(lastMove);
+                printCommandsAndBoard();
+            }
+        }
+    }
+
+    /**
+     * Redoes the last undone move if possible
+     */
+    private static void redoMove() {
+        // check if there are any moves to redo
+        if(undoneMoves.empty()) {
+            System.out.println("No moves to redo");
+        }
+        else {
+            String lastMove = undoneMoves.pop();
+            String[] values = lastMove.split("");
+            int row = Integer.valueOf(values[0]);
+            int column = Integer.valueOf(values[1]);
+            int value = Integer.valueOf(values[2]);
+
+            if(board.insertValue(row, column, value) != -1) {
+                System.out.println("Move redone");
+                // push the undone move to the undone moves stack
+                lastMove = values[0] + values[1] + values[3] + values[2];
+                moves.push(lastMove);
+                // store in the moves queue
+                movesQueue.add(lastMove);
+                printCommandsAndBoard();
+            }
+        }
+    }
+
+    private static void replayAllMoves(Scanner scanner) {
+        // check if there are any moves to replay at all
+        if(!movesQueue.isEmpty()) {
+            // get a copy of the initial board
+            int[][] initialBoard = board.getInitialBoard();
+            System.out.println("Initial board:");
+            printBoard(initialBoard);   // print the initial board
+            System.out.println("Press Enter to start replay.");
+            // once key is pressed, the timer will start
+            try {
+                System.in.read();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            boolean exit = false;
+            while(!exit) {
+                int moveCounter = 1;
+                for(String move : movesQueue){
+                    System.out.println("Move " + moveCounter++);
+                    makeMove(initialBoard, move);
+                    // ask to continue
+                    boolean correctInput = false;
+                    while(!correctInput) {
+                        System.out.println("Press N to continue or E to exit replay");
+                        char choice = scanner.next().charAt(0);
+                        switch(choice) {
+                            case 'N':
+                            case 'n':
+                                correctInput = true;
+                                break;
+                            case 'E':
+                            case 'e':
+                                correctInput = true;
+                                exit = true;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                if(moveCounter > movesQueue.size()) {
+                    break;
+                }
+            }
+            System.out.println("Replay finished");
+        }
+        else {
+            System.out.println("No moves to replay");
+        }
+    }
+
+    /**
+     * Prints the playing board and a menu of options
+     */
+    private static void printCommandsAndBoard() {
         // print the playing board and commands
-        board.printOriginal();
         board.printBoard();
         String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value\n";
         String line = "-----------------------------------------------------------------------";
         System.out.println(line + "\n" + commands + line);
+    }
+
+    private static void printBoard(int[][] board) {
+        int rowsCounter = 1;
+        // print columns numbering
+        String columnNumbering = "       1 2 3   4 5 6   7 8 9 \n\n";
+        System.out.print(columnNumbering);
+
+        // print the grid
+        for (int i = 0; i < board.length; i++) {
+            if(i % 3 == 0 && i != 0) {
+                System.out.print("\n");
+            }
+            System.out.print(rowsCounter++ + "    ");  // print row number
+
+            for (int j = 0; j < board.length; j++) {
+                if(j % 3 == 0) {
+                    System.out.print("| ");
+                }
+                if(board[i][j] == 0) {
+                    System.out.print("_ ");
+                }
+                else {
+                    System.out.print(board[i][j] + " ");
+                }
+            }
+            System.out.print("|\n");
+        }
+    }
+
+    private static void makeMove(int[][] board, String move) {
+        String[] values = move.split("");
+        int row = Integer.valueOf(values[0]);
+        int column = Integer.valueOf(values[1]);
+        int newValue = Integer.valueOf(values[3]);
+
+        board[row - 1][column - 1] = newValue;
+        printBoard(board);
     }
 }

@@ -404,18 +404,19 @@ public class Board {
      * @param row   row (1-9)
      * @param column    column (1-9)
      * @param value     value to enter
-     * @return  if successful
+     * @return  value initially in the cell if successful, otherwise -1
      */
-    public boolean insertValue(int row, int column, int value) {
+    public int insertValue(int row, int column, int value) {
         // check if the cell is not a given
         if(initialBoard[row - 1][column - 1] != 0) {
             System.out.println("Cannot modify a given cell");
-            return false;
+            return -1;
         }
         // else, insert it into the board
         else {
+            int initialValue = board[row - 1][column - 1];
             board[row - 1][column - 1] = value;
-            return true;
+            return initialValue;
         }
     }
 
@@ -435,4 +436,10 @@ public class Board {
         System.out.println("Congratulations! You completed the board.");
         return true;
     }
+
+    public int[][] getInitialBoard() {
+        return initialBoard;
+    }
+
+
 }
