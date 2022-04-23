@@ -5,7 +5,7 @@ import java.util.*;
 public class Board {
     int[][] board; // 2D array to store the board to play
     int[][] completeBoard; // original board to compare against
-    int[][] initialBoard;
+    int[][] initialBoard; // board with empty cells at the start of the game
     String[][] possibleValues; // 2D array to store all possible values for each cell
     int columns;
     int rows;
@@ -393,6 +393,46 @@ public class Board {
                 }
             }
         }
+        if(solved) {
+            solved = checkCompleteBoard();
+        }
         return solved;
+    }
+
+    /**
+     * Inserts a value into the cell with coordinates provided
+     * @param row   row (1-9)
+     * @param column    column (1-9)
+     * @param value     value to enter
+     * @return  if successful
+     */
+    public boolean insertValue(int row, int column, int value) {
+        // check if the cell is not a given
+        if(initialBoard[row - 1][column - 1] != 0) {
+            System.out.println("Cannot modify a given cell");
+            return false;
+        }
+        // else, insert it into the board
+        else {
+            board[row - 1][column - 1] = value;
+            return true;
+        }
+    }
+
+    /**
+     * Compares the board against the complete board and determines if they're the same
+     * @return  if the boards are the same
+     */
+    public boolean checkCompleteBoard() {
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 0; j < board.length; j++) {
+                if(board[i][j] != completeBoard[i][j]) {
+                    System.out.println("You have some errors in your board.");
+                    return false;
+                }
+            }
+        }
+        System.out.println("Congratulations! You completed the board.");
+        return true;
     }
 }

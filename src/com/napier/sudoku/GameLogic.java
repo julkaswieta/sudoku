@@ -73,6 +73,7 @@ public class GameLogic {
         int choice = -1;
         // keep asking for actions until the user chooses to exit
         while (true) {
+            System.out.println("MAIN MENU");
             System.out.println("Choose your action:");
             System.out.println("1 - Start a new game");
             System.out.println("2 - Load a previous game");
@@ -188,80 +189,44 @@ public class GameLogic {
             // get the first letter that the user types
             System.out.println("Choose your next action");
             boolean validChoice = false;
-            while(!validChoice) {
-                char choice  = scanner.next().charAt(0);
-                validChoice = actOnGameChoice(choice);
+            char choice = '0';
+            while (!validChoice) {
+                choice = scanner.next().charAt(0);
+                validChoice = actOnGameChoice(choice, scanner, board);
+                scanner.nextLine();
             }
-
-
-
-            /*
-            boolean valid = false;
-            while(!valid) {
-                System.out.print("Cell coordinates: ");
-                int row = -1;
-                int column = -1;
-                String line = "";
-                // first, check if an option is not selected
-                try {
-                    line = scanner.next();
+            if(choice == 'E' || choice == 'e') {
+                System.out.println("Are you sure you want to exit without saving [Y/N]?");
+                char confirm = scanner.next().charAt(0);
+                boolean exit = false;
+                switch(confirm) {
+                    case 'Y':
+                    case 'y':
+                        exit = true;
+                        break;
+                    case 'N':
+                    case 'n':
+                        exit = false;
+                        break;
+                    default:
+                        System.out.println("Invalid input. Try again");
+                        break;
                 }
-                catch (Exception ex) {
-                    System.out.println("Invalid input provided. Please try again.");
-                    scanner.next();
-                }
-
-                if(!line.isEmpty()) {
-                    try {
-                        String[] split = line.split(" ");
-                        row = Integer.valueOf(split[0]);
-                        column = Integer.valueOf(split[1]);
-                        if(row >= 1 && row <= 9 && column >= 1 && column <= 9) {
-                            valid = true;
-                        }
-                        else {
-                            System.out.println("Invalid coordinates provided. Please try again.");
-                        }
-                    }
-                    catch (Exception ex) {
-                        System.out.println("Something went wrong. Please try again.");
-                    }
-                }
-
-                 */
-
-
-            }
-            /*
-            boolean validValue = false;
-            while(!validValue) {
-                System.out.print("Value to enter: ");
-                int value = -1;
-                try {
-                    value = scanner.nextInt();
-                }
-                catch (Exception ex) {
-                    System.out.println("Invalid value provided. Please try again.");
-                    scanner.next();
-                }
-
-                // validate the move and store it in the board
-                if(value >= 1 && value <= 9) {
-                    validValue = true;
-                }
-                else {
-                    System.out.println("Invalid value provided. Please try again.");
+                if(exit) {
+                    break;
                 }
             }
-
-
         }
-             */
-
-
     }
 
-    private static boolean actOnGameChoice(char choice) {
+    /**
+     * Perform actions based on user choice during gameplay
+     * @param choice    choice code
+     * @param scanner   scanner for scanning input
+     * @param board     board to operate on
+     * @return  if successful
+     */
+    private static boolean actOnGameChoice(char choice, Scanner scanner, Board board) {
         switch(choice) {
             case 'E':
             case 'e':
@@ -270,8 +235,62 @@ public class GameLogic {
                 return true;
             case 'V':
             case 'v':
-                System.out.println("Chosen: V");
-                // enter a value
+                // ask for coordinates
+                int row = -1;
+                int column = -1;
+                boolean incorrectCoordinates = true;
+                while(incorrectCoordinates) {
+                    try {
+                        System.out.print("Enter coordinates: ");
+                        row = scanner.nextInt();
+                        column = scanner.nextInt();
+                    }
+                    catch (Exception ex) {
+                        System.out.println("Invalid coordinates provided. Please try again.");
+                        scanner.nextLine();
+                        continue;
+                    }
+                    if(row != -1 && column != -1) {
+                        if(row < 1 || row > 9 || column < 1 || column > 9) {
+                            System.out.println("Coordinates must be in range 1-9");
+                        }
+                        else {
+                            incorrectCoordinates = false;
+                        }
+                    }
+                    else {
+                        System.out.println("Coordinates must be in range 1-9");
+                    }
+                }
+                // ask for a value
+                int value = -1;
+                boolean incorrectValue = true;
+                while (incorrectValue) {
+                    try {
+                        System.out.print("Enter value: ");
+                        value = scanner.nextInt();
+                    }
+                    catch (Exception ex) {
+                        System.out.println("Invalid value provided. Please try again.");
+                        scanner.nextLine();
+                        continue;
+                    }
+                    if(value != -1) {
+                        if (value < 1 || value > 9) {
+                            System.out.println("Value must be in range 1-9");
+                        }
+                        else{
+                            incorrectValue = false;
+                        }
+                    }
+                    else {
+                        System.out.println("Value must be in range 1-9");
+                    }
+                }
+                // insert the coordinates into the board
+                if(board.insertValue(row, column, value)) {
+                    printCommandsAndBoard(board);
+                }
                 return true;
             case 'U':
             case 'u':
@@ -316,10 +335,10 @@ public class GameLogic {
 
     private static void printCommandsAndBoard(Board board) {
         // print the playing board and commands
-        String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value";
+        board.printOriginal();
+        board.printBoard();
+        String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value\n";
         String line = "-----------------------------------------------------------------------";
         System.out.println(line + "\n" + commands + line);
-
-        board.printBoard();
     }
 }
