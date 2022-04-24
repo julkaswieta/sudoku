@@ -21,6 +21,7 @@ public class GameLogic {
     private static Stack<String> moves;
     private static Stack<String> undoneMoves;
     private static Queue<String> movesQueue;
+    private static int cluesUsed;
 
     /**
      * Driver code
@@ -142,6 +143,7 @@ public class GameLogic {
         moves = new Stack<>();
         undoneMoves = new Stack<>();
         movesQueue = new LinkedList<>();
+        cluesUsed = 0;
 
         switch(gameDifficulty) {
             case 1:
@@ -276,7 +278,13 @@ public class GameLogic {
             case 'C':
             case 'c':
                 // fill one random cell
-                fillClue();
+                // check if all clues have not been used
+                if (cluesUsed >= 3) {
+                    System.out.println("All clues have been used.");
+                }
+                else {
+                    fillClue();
+                }
                 return true;
             case 'D':
             case 'd':
@@ -318,7 +326,9 @@ public class GameLogic {
         // get the right value
         int value = board.getCorrectValue(row, column);
         board.insertValue(row + 1, column + 1, value);
-        board.printOriginal();
+        cluesUsed++;
+        String move = String.valueOf(row + 1) + String.valueOf(column + 1) + String.valueOf(0) + String.valueOf(value);
+        movesQueue.add(move);
         board.printBoard();
         printCommands();
         System.out.println("Clue filled at " + (row + 1) + ", " + (column + 1));
@@ -327,9 +337,12 @@ public class GameLogic {
     private static void displayNumbersInBoard() {
         int[] numbers = board.countNumbersInBoard();
         System.out.println("Values currently in the board: ");
+        int total = 0;
         for(int i = 0; i < numbers.length; i++) {
             System.out.println((i + 1) + " - " + numbers[i] + "/9");
+            total += numbers[i];
         }
+        System.out.println("Total: " + total + "/81");
         printCommands();
     }
 
@@ -469,7 +482,8 @@ public class GameLogic {
             while(!exit) {
                 int moveCounter = 1;
                 for(String move : movesQueue){
-                    System.out.println("Move " + moveCounter++);
+                    String[] split = move.split("");
+                    System.out.println("Move " + moveCounter++ + ": (" + split[0] + ", " + split[1] + ") " + split[3]);
                     makeMove(initialBoard, move);
                     // ask to continue
                     boolean correctInput = false;
@@ -510,6 +524,12 @@ public class GameLogic {
         String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value\n";
         String line = "-----------------------------------------------------------------------";
         System.out.println(line + "\n" + commands + line);
+        if(cluesUsed < 3) {
+            System.out.println("Clues available: " + (3 - cluesUsed) + "/3");
+        }
+        else {
+            System.out.println("No clues available");
+        }
     }
 
     private static void printBoard(int[][] board) {
