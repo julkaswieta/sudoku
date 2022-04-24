@@ -441,5 +441,86 @@ public class Board {
         return initialBoard;
     }
 
+    /**
+     * Counts how many of each value there are currently in the board
+     * @return  int array with the value counts
+     */
+    public int[] countNumbersInBoard() {
+        int oneCount = 0;
+        int twoCount = 0;
+        int threeCount = 0;
+        int fourCount = 0;
+        int fiveCount = 0;
+        int sixCount = 0;
+        int sevenCount = 0;
+        int eightCount = 0;
+        int nineCount = 0;
+        // count the numbers
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 0; j < board.length; j++) {
+                switch(board[i][j]) {
+                    case 1:
+                        oneCount++;
+                        break;
+                    case 2:
+                        twoCount++;
+                        break;
+                    case 3:
+                        threeCount++;
+                        break;
+                    case 4:
+                        fourCount++;
+                        break;
+                    case 5:
+                        fiveCount++;
+                        break;
+                    case 6:
+                        sixCount++;
+                        break;
+                    case 7:
+                        sevenCount++;
+                        break;
+                    case 8:
+                        eightCount++;
+                        break;
+                    case 9:
+                        nineCount++;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        return new int[]{oneCount, twoCount, threeCount, fourCount, fiveCount, sixCount, sevenCount, eightCount, nineCount};
+    }
 
+    /**
+     * Returns a list of empty cell coordinates at the point when the method is called
+     * @return  String array of coordinates
+     */
+    public String[] getEmptyCells() {
+        // at maximum, the board can have 53 empty cells
+        String[] cells = new String[53];
+        int cellCounter = 0;
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 0; j < board.length; j++) {
+                if(board[i][j] == 0) {
+                    String coordinates = String.valueOf(i) + String.valueOf(j);
+                    cells[cellCounter] = coordinates;
+                    cellCounter++;
+                }
+            }
+        }
+        return cells;
+    }
+
+    /**
+     * Gets the correct value for the cell specified (coordinates as stored in the array - 0-8)
+     * @param row   row of the cell
+     * @param column    column of the cell
+     * @return  correct value for the cell at the given coordinates
+     */
+    public int getCorrectValue(int row, int column) {
+        return completeBoard[row][column];
+    }
 }

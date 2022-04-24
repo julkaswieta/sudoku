@@ -1,12 +1,8 @@
 package com.napier.sudoku;
 
-import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Main class with driver code for the game
@@ -192,7 +188,8 @@ public class GameLogic {
             ex.printStackTrace();
         }
 
-        printCommandsAndBoard();
+        board.printBoard();
+        printCommands();
 
         System.out.println("Format of the coordinates: \"row column\"");
 
@@ -255,7 +252,8 @@ public class GameLogic {
                 int initialValue = board.insertValue(row, column, value);
                 if(initialValue != -1) {
                     // push the move onto the moves stack and store in the moves queue
-                    printCommandsAndBoard();
+                    board.printBoard();
+                    printCommands();
                     moves.push(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
                     movesQueue.add(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
                 }
@@ -277,13 +275,13 @@ public class GameLogic {
                 return true;
             case 'C':
             case 'c':
-                System.out.println("Chosen: C");
                 // fill one random cell
+                fillClue();
                 return true;
             case 'D':
             case 'd':
-                System.out.println("Chosen: D");
-                // print how many of which number is left to be filled
+                // print how many of which number is already in the board
+                displayNumbersInBoard();
                 return true;
             case 'S':
             case 's':
@@ -301,6 +299,39 @@ public class GameLogic {
         }
     }
 
+    private static void fillClue() {
+        String[] emptyCells = board.getEmptyCells();
+        // count non-zero coordinates
+        int cellCounter = 0;
+        for(String cell : emptyCells) {
+            if(cell != null && !cell.isEmpty()) {
+                cellCounter++;
+            }
+        }
+        // pick a random cell
+        Random rand = new Random();
+        int cell = rand.nextInt(1, cellCounter);
+        String coordinates = emptyCells[cell - 1];
+        String[] split = coordinates.split("");
+        int row = Integer.valueOf(split[0]);
+        int column = Integer.valueOf(split[1]);
+        // get the right value
+        int value = board.getCorrectValue(row, column);
+        board.insertValue(row + 1, column + 1, value);
+        board.printOriginal();
+        board.printBoard();
+        printCommands();
+        System.out.println("Clue filled at " + (row + 1) + ", " + (column + 1));
+    }
+
+    private static void displayNumbersInBoard() {
+        int[] numbers = board.countNumbersInBoard();
+        System.out.println("Values currently in the board: ");
+        for(int i = 0; i < numbers.length; i++) {
+            System.out.println((i + 1) + " - " + numbers[i] + "/9");
+        }
+        printCommands();
+    }
 
 
     private static int[] askForCoordinates(Scanner scanner) {
@@ -386,7 +417,8 @@ public class GameLogic {
                 undoneMoves.push(lastMove);
                 // store in the moves queue
                 movesQueue.add(lastMove);
-                printCommandsAndBoard();
+                board.printBoard();
+                printCommands();
             }
         }
     }
@@ -413,7 +445,8 @@ public class GameLogic {
                 moves.push(lastMove);
                 // store in the moves queue
                 movesQueue.add(lastMove);
-                printCommandsAndBoard();
+                board.printBoard();
+                printCommands();
             }
         }
     }
@@ -467,14 +500,13 @@ public class GameLogic {
         else {
             System.out.println("No moves to replay");
         }
+        printCommands();
     }
 
     /**
      * Prints the playing board and a menu of options
      */
-    private static void printCommandsAndBoard() {
-        // print the playing board and commands
-        board.printBoard();
+    private static void printCommands() {
         String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value\n";
         String line = "-----------------------------------------------------------------------";
         System.out.println(line + "\n" + commands + line);
