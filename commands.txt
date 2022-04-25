@@ -1,0 +1,5 @@
+V - enter a value       H - help
+U - undo a move         R - redo a move
+M - review all moves    O - start over
+C - clue                D - count each value
+S - save to disk        E - exit

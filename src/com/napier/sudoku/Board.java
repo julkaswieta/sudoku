@@ -523,4 +523,11 @@ public class Board {
     public int getCorrectValue(int row, int column) {
         return completeBoard[row][column];
     }
+
+    /**
+     * Sets the playing board back to the initial board
+     */
+    public void startOver() {
+        board = getInitialBoard();
+    }
 }

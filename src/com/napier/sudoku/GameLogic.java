@@ -238,12 +238,11 @@ public class GameLogic {
      */
     private static boolean actOnGameChoice(char choice, Scanner scanner) {
         switch(choice) {
-            case 'E':
-            case 'e':
+            case 'E', 'e':
                 // exit to main menu handled in the calling method
+                // here only to check if input is correct
                 return true;
-            case 'V':
-            case 'v':
+            case 'V', 'v':
                 // get the coordinates and value to modify
                 int[] rowColumn= askForCoordinates(scanner);
                 int row = rowColumn[0];
@@ -260,23 +259,19 @@ public class GameLogic {
                     movesQueue.add(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
                 }
                 return true;
-            case 'U':
-            case 'u':
+            case 'U', 'u':
                 // undo a move
                 undoMove();
                 return true;
-            case 'R':
-            case 'r':
+            case 'R', 'r':
                 // redo a move
                 redoMove();
                 return true;
-            case 'P':
-            case 'p':
+            case 'M', 'm':
                 // replay from beginning
                 replayAllMoves(scanner);
                 return true;
-            case 'C':
-            case 'c':
+            case 'C', 'c':
                 // fill one random cell
                 // check if all clues have not been used
                 if (cluesUsed >= 3) {
@@ -286,24 +281,72 @@ public class GameLogic {
                     fillClue();
                 }
                 return true;
-            case 'D':
-            case 'd':
+            case 'D', 'd':
                 // print how many of which number is already in the board
                 displayNumbersInBoard();
                 return true;
-            case 'S':
-            case 's':
+            case 'O', 'o':
+                // start over from the initial board
+                startOver(scanner);
+                return true;
+            case 'S', 's':
                 System.out.println("Chosen: S");
                 // save to disk
                 return true;
-            case 'H':
-            case 'h':
-                System.out.println("Chosen: H");
+            case 'H', 'h':
                 // print help
+                printHelp();
                 return true;
             default:
                 System.out.println("Invalid value specified. Please try again.");
                 return false;
+        }
+    }
+
+    private static void printHelp() {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("help.txt"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Could not print help instructions");
+        }
+        board.printBoard();
+        printCommands();
+    }
+
+    private static void startOver(Scanner scanner) {
+        // ask to confirm
+        System.out.println("Are you sure you want to start from the beginning [Y/N]?");
+        boolean correctInput = false;
+        boolean startOver = true;
+        while(!correctInput) {
+            char confirm = scanner.next().charAt(0);
+            switch(confirm) {
+                case 'Y', 'y':
+                    correctInput = true;
+                    break;
+                case 'N', 'n':
+                    startOver = false;
+                    correctInput = true;
+                    break;
+                default:
+                    System.out.println("Invalid input. Try again");
+                    break;
+            }
+        }
+        if(startOver) {
+            board.startOver();
+            moves = new Stack<>();
+            undoneMoves = new Stack<>();
+            movesQueue = new LinkedList<>();
+            cluesUsed = 0;
+            System.out.println("Starting over...");
+            board.printBoard();
+            printCommands();
         }
     }
 
@@ -521,9 +564,19 @@ public class GameLogic {
      * Prints the playing board and a menu of options
      */
     private static void printCommands() {
-        String commands = "U - undo a move    R - redo a move    P - replay moves from beginning\nC - clue           D - digits statistics\nS - save to disk   H - help    E - exit\nV - enter value\n";
-        String line = "-----------------------------------------------------------------------";
-        System.out.println(line + "\n" + commands + line);
+        String divider = "-----------------------------------------------------------------------";
+        System.out.println(divider);
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("commands.txt"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Could not print commands");
+        }
+        System.out.println(divider);
         if(cluesUsed < 3) {
             System.out.println("Clues available: " + (3 - cluesUsed) + "/3");
         }

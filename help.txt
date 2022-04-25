@@ -1,0 +1,36 @@
+Commands explanation:
+----------------------------------------------------------------------------------------------------------------------------------
+V - enter a value
+Enter a new value to the board using the cell coordinates [row column].
+First, specify the row and column, and then enter the value.
+
+U - undo a move
+Undoes the last move made, i.e. removes the last entered value.
+
+R - redo a move
+Redoes the last undone move. For example:
+If you entered 5 into (5, 6), and then undo this move, you can redo it again so that the 5 is in the board again.
+
+M - review all moves
+Replays all moves from the beginning, one by one.
+
+O - start over
+Restarts the game to the initial stage, resetting all moves and clues.
+
+C - clue
+Fills in a random empty cell with the correct value. You are allowed to use this feature 3 times for each board.
+
+D - count each value
+Displays information on how many of each value is already present in the board and how many cells are filled in total.
+
+S - save to disk
+Saves the game progress to the disk so that it's not lost. Then, it can be reloaded.
+
+E - exit
+Exits to the main menu without saving the progress.
+
+----------------------------------------------------------------------------------------------------------------------------------
+Goal of the game:
+Sudoku is a grid comprising 9 columns and 9 rows, additionally subdivided into 9 smaller 3x3 grids.
+The grid is initially filled with a number of clues, depending on the level of difficulty of the board.
+The goal is to fill the grid in such a way that each column, row and sub-grid contains exactly one instance of digits 1 through 9.
