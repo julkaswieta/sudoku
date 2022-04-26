@@ -25,6 +25,7 @@ public class GameLogic {
     private static int cluesUsed;
     private static boolean saveUpToDate;
     private static String difficultyLevel;
+    private static File save;
 
     /**
      * Driver code
@@ -147,24 +148,50 @@ public class GameLogic {
         undoneMoves = new Stack<>();
         movesQueue = new LinkedList<>();
         cluesUsed = 0;
-        saveUpToDate = false;
+        saveUpToDate = true;
+
+
 
         switch(gameDifficulty) {
             case 1:
                 board.generateEasyBoard();
                 difficultyLevel = "easy";
+                createSaveFile();
                 playGame(scanner);
                 break;
             case 2:
                 board.generateMediumBoard();
                 difficultyLevel = "medium";
+                createSaveFile();
                 playGame(scanner);
                 break;
             case 3:
                 board.generateHardBoard();
                 difficultyLevel = "hard";
+                createSaveFile();
                 playGame(scanner);
                 break;
+        }
+    }
+
+    /**
+     * Creates a saves directory in the file system and a save file for the game instance
+     */
+    private static void createSaveFile() {
+        try {
+            // if saves directory doesn't exist, create it
+            File directory = new File(".\\saves");
+            if (!directory.exists()){
+                directory.mkdirs();
+            }
+            DateTimeFormatter formatDate = DateTimeFormatter.ofPattern("ddMMyyyy_HHmm");
+            String formattedDate = LocalDateTime.now().format(formatDate);
+            String filename = formattedDate + "_" + difficultyLevel + ".txt";
+
+            save = new File(".\\saves\\" + filename);
+        }
+        catch (Exception ex) {
+            System.out.println("There was an error creating a save file");
         }
     }
 
@@ -187,6 +214,10 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Deals with playing the game
+     * @param scanner   Scanner used for user input
+     */
     private static void playGame(Scanner scanner) {
         // ask if ready to play
         System.out.println("Press Enter to start the game");
@@ -214,27 +245,39 @@ public class GameLogic {
                 scanner.nextLine();
             }
             if(choice == 'E' || choice == 'e') {
-                System.out.println("Are you sure you want to exit without saving [Y/N]?");
-                char confirm = scanner.next().charAt(0);
-                boolean exit = false;
-                switch(confirm) {
-                    case 'Y':
-                    case 'y':
-                        exit = true;
+                // check if the save is up-to-date
+                if(!saveUpToDate) {
+                    System.out.println("Are you sure you want to exit without saving [Y/N]?");
+                    char confirm = scanner.next().charAt(0);
+                    boolean exit = false;
+                    switch(confirm) {
+                        case 'Y':
+                        case 'y':
+                            exit = true;
+                            break;
+                        case 'N':
+                        case 'n':
+                            exit = false;
+                            break;
+                        default:
+                            System.out.println("Invalid input. Try again");
+                            break;
+                    }
+                    if(exit) {
                         break;
-                    case 'N':
-                    case 'n':
-                        exit = false;
-                        break;
-                    default:
-                        System.out.println("Invalid input. Try again");
-                        break;
+                    }
                 }
-                if(exit) {
+                else {
                     break;
                 }
+
+
             }
         }
+    }
+
+    private static void deleteEmptySave() {
+
     }
 
     /**
@@ -311,51 +354,49 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Saves a game to a file so that it can later be read
+     */
     private static void saveGame() {
         // check if the latest progress has been saved
         if(saveUpToDate) {
             System.out.println("Progress already saved.");
         }
         else {
-            System.out.println("Saving the game...");
-            DateTimeFormatter formatDate = DateTimeFormatter.ofPattern("ddMMyyyy_HHmm");
-            String formattedDate = LocalDateTime.now().format(formatDate);
-            String filename = formattedDate + "_" + difficultyLevel + ".txt";
             try {
-                File directory = new File(".\\saves");
-                if (!directory.exists()){
-                    directory.mkdirs();
+                if(!save.exists()){
+                    save.createNewFile();
                 }
-                File file = new File(".\\saves\\" + filename);
-
-                if(!file.exists()){
-                    file.createNewFile();
+                // check if the file contains some saved data already - if so, overwrite it with the first line and then keep appending
+                BufferedWriter writer;
+                if(save.length() != 0) {
+                    writer = new BufferedWriter(new FileWriter(save));
+                    writer.write(board.originalToString());
+                    writer.close();
+                    writer = new BufferedWriter(new FileWriter(save, true));
+                    writer.newLine();
                 }
+                else {
+                    writer = new BufferedWriter(new FileWriter(save, true));
+                    writer.write(board.originalToString());
+                }
+                // get the data
+                ArrayList<String> output = new ArrayList<>();
+                output.add(board.initialToString());
+                output.add(board.boardToString());
+                output.add(movesToString());
+                output.add(undoneMovesToString());
+                output.add(movesQueueToString());
+                output.add(String.valueOf(cluesUsed));
 
-                BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
-                // each item will be saved on one line, with elements delimited by spaces
-                // save the original board
-                writer.write(board.originalToString());
-                writer.newLine();
-                // save the initial board
-                writer.write(board.initialToString());
-                writer.newLine();
-                // save the playing board
-                writer.write(board.boardToString());
-                writer.newLine();
-                // save moves
-                writer.write(movesToString());
-                writer.newLine();
-                // save undone moves
-                writer.write(undoneMovesToString());
-                writer.newLine();
-                // save moves queue
-                writer.write(movesQueueToString());
-                writer.newLine();
-                writer.write(cluesUsed);
-                writer.newLine();
+                // write to the file
+                for(String line : output) {
+                    writer.write(line);
+                    writer.newLine();
+                }
                 writer.close();
                 System.out.println("Game saved successfully");
+                saveUpToDate = true;
             }
             catch (Exception ex) {
                 System.out.println("Could not save the game");
@@ -363,6 +404,10 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Converts the moves stack to a string
+     * @return  String with moves delimited by spaces
+     */
     private static String movesToString() {
         String string = "";
         Iterator move = moves.iterator();
@@ -374,6 +419,10 @@ public class GameLogic {
         return string;
     }
 
+    /**
+     * Converts the undone moves stack to a string
+     * @return  String with undone moves delimited by spaces
+     */
     private static String undoneMovesToString() {
         String string = "";
         Iterator move = undoneMoves.iterator();
@@ -385,6 +434,10 @@ public class GameLogic {
         return string;
     }
 
+    /**
+     * Converts the moves queue to a string
+     * @return  String with moves delimited by spaces
+     */
     private static String movesQueueToString() {
         String string = "";
         Iterator move = movesQueue.iterator();
@@ -396,6 +449,9 @@ public class GameLogic {
         return string;
     }
 
+    /**
+     * Reads in the help file and prints it to the console
+     */
     private static void printHelp() {
         try {
             BufferedReader br = new BufferedReader(new FileReader("help.txt"));
@@ -411,6 +467,10 @@ public class GameLogic {
         printCommands();
     }
 
+    /**
+     * Resets the game progress to the initial board
+     * @param scanner   Scanner for reading in user input
+     */
     private static void startOver(Scanner scanner) {
         // ask to confirm
         System.out.println("Are you sure you want to start from the beginning [Y/N]?");
@@ -444,6 +504,9 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Picks a random empty cell from the board and fills it in with the correct value
+     */
     private static void fillClue() {
         String[] emptyCells = board.getEmptyCells();
         // count non-zero coordinates
@@ -472,6 +535,9 @@ public class GameLogic {
         System.out.println("Clue filled at " + (row + 1) + ", " + (column + 1));
     }
 
+    /**
+     * Counts how many of each value there are already in the board and displays it in the console
+     */
     private static void displayNumbersInBoard() {
         int[] numbers = board.countNumbersInBoard();
         System.out.println("Values currently in the board: ");
@@ -484,7 +550,11 @@ public class GameLogic {
         printCommands();
     }
 
-
+    /**
+     * Asks the user to enter cell coordinates. Checks them for validity
+     * @param scanner   Scanner to read in the input
+     * @return  int[] with row and column coordinates
+     */
     private static int[] askForCoordinates(Scanner scanner) {
         // ask for coordinates
         int row = -1;
@@ -516,6 +586,11 @@ public class GameLogic {
         return new int[]{row, column};
     }
 
+    /**
+     * Asks the user to provide the value to enter to the board
+     * @param scanner   Scanner to read in user input
+     * @return  int representing the value to enter
+     */
     private static int askForValue(Scanner scanner) {
         // ask for a value
         int value = -1;
@@ -604,6 +679,10 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Manages replaying all the moves from beginning
+     * @param scanner   Scanner to read in user input
+     */
     private static void replayAllMoves(Scanner scanner) {
         // check if there are any moves to replay at all
         if(!movesQueue.isEmpty()) {
@@ -682,6 +761,11 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Prints the playing board to the console. Copy of the Board.printBoard() function to print intermediate boards
+     * when replaying all the moves.
+     * @param board int[][] to print
+     */
     private static void printBoard(int[][] board) {
         int rowsCounter = 1;
         // print columns numbering
@@ -710,6 +794,11 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Helper function used in replaying all moves
+     * @param board int[][] - board where the moves will be reflected
+     * @param move  move to play out
+     */
     private static void makeMove(int[][] board, String move) {
         String[] values = move.split("");
         int row = Integer.valueOf(values[0]);
