@@ -530,4 +530,37 @@ public class Board {
     public void startOver() {
         board = getInitialBoard();
     }
-}
+
+    public String originalToString() {
+        String board = "";
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                board += completeBoard[i][j];
+                board += " ";
+            }
+        }
+        return board;
+    }
+
+    public String initialToString() {
+        String board = "";
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                board += initialBoard[i][j];
+                board += " ";
+            }
+        }
+        return board;
+    }
+
+    public String boardToString() {
+        String string = "";
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                string += board[i][j];
+                string += " ";
+            }
+        }
+        return string;
+    }
+ }

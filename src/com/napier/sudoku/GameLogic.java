@@ -1,7 +1,8 @@
 package com.napier.sudoku;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -22,6 +23,8 @@ public class GameLogic {
     private static Stack<String> undoneMoves;
     private static Queue<String> movesQueue;
     private static int cluesUsed;
+    private static boolean saveUpToDate;
+    private static String difficultyLevel;
 
     /**
      * Driver code
@@ -144,18 +147,22 @@ public class GameLogic {
         undoneMoves = new Stack<>();
         movesQueue = new LinkedList<>();
         cluesUsed = 0;
+        saveUpToDate = false;
 
         switch(gameDifficulty) {
             case 1:
                 board.generateEasyBoard();
+                difficultyLevel = "easy";
                 playGame(scanner);
                 break;
             case 2:
                 board.generateMediumBoard();
+                difficultyLevel = "medium";
                 playGame(scanner);
                 break;
             case 3:
                 board.generateHardBoard();
+                difficultyLevel = "hard";
                 playGame(scanner);
                 break;
         }
@@ -257,6 +264,7 @@ public class GameLogic {
                     printCommands();
                     moves.push(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
                     movesQueue.add(String.valueOf(row) + String.valueOf(column) + String.valueOf(initialValue) + String.valueOf(value));
+                    saveUpToDate = false;
                 }
                 return true;
             case 'U', 'u':
@@ -290,8 +298,8 @@ public class GameLogic {
                 startOver(scanner);
                 return true;
             case 'S', 's':
-                System.out.println("Chosen: S");
                 // save to disk
+                saveGame();
                 return true;
             case 'H', 'h':
                 // print help
@@ -301,6 +309,91 @@ public class GameLogic {
                 System.out.println("Invalid value specified. Please try again.");
                 return false;
         }
+    }
+
+    private static void saveGame() {
+        // check if the latest progress has been saved
+        if(saveUpToDate) {
+            System.out.println("Progress already saved.");
+        }
+        else {
+            System.out.println("Saving the game...");
+            DateTimeFormatter formatDate = DateTimeFormatter.ofPattern("ddMMyyyy_HHmm");
+            String formattedDate = LocalDateTime.now().format(formatDate);
+            String filename = formattedDate + "_" + difficultyLevel + ".txt";
+            try {
+                File directory = new File(".\\saves");
+                if (!directory.exists()){
+                    directory.mkdirs();
+                }
+                File file = new File(".\\saves\\" + filename);
+
+                if(!file.exists()){
+                    file.createNewFile();
+                }
+
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+                // each item will be saved on one line, with elements delimited by spaces
+                // save the original board
+                writer.write(board.originalToString());
+                writer.newLine();
+                // save the initial board
+                writer.write(board.initialToString());
+                writer.newLine();
+                // save the playing board
+                writer.write(board.boardToString());
+                writer.newLine();
+                // save moves
+                writer.write(movesToString());
+                writer.newLine();
+                // save undone moves
+                writer.write(undoneMovesToString());
+                writer.newLine();
+                // save moves queue
+                writer.write(movesQueueToString());
+                writer.newLine();
+                writer.write(cluesUsed);
+                writer.newLine();
+                writer.close();
+                System.out.println("Game saved successfully");
+            }
+            catch (Exception ex) {
+                System.out.println("Could not save the game");
+            }
+        }
+    }
+
+    private static String movesToString() {
+        String string = "";
+        Iterator move = moves.iterator();
+
+        while (move.hasNext()) {
+            string += move.next();
+            string += " ";
+        }
+        return string;
+    }
+
+    private static String undoneMovesToString() {
+        String string = "";
+        Iterator move = undoneMoves.iterator();
+
+        while (move.hasNext()) {
+            string += move.next();
+            string += " ";
+        }
+        return string;
+    }
+
+    private static String movesQueueToString() {
+        String string = "";
+        Iterator move = movesQueue.iterator();
+
+        while (move.hasNext()) {
+            string += move.next();
+            string += " ";
+        }
+        return string;
     }
 
     private static void printHelp() {
@@ -344,6 +437,7 @@ public class GameLogic {
             undoneMoves = new Stack<>();
             movesQueue = new LinkedList<>();
             cluesUsed = 0;
+            saveUpToDate = false;
             System.out.println("Starting over...");
             board.printBoard();
             printCommands();
@@ -372,6 +466,7 @@ public class GameLogic {
         cluesUsed++;
         String move = String.valueOf(row + 1) + String.valueOf(column + 1) + String.valueOf(0) + String.valueOf(value);
         movesQueue.add(move);
+        saveUpToDate = false;
         board.printBoard();
         printCommands();
         System.out.println("Clue filled at " + (row + 1) + ", " + (column + 1));
@@ -473,6 +568,7 @@ public class GameLogic {
                 undoneMoves.push(lastMove);
                 // store in the moves queue
                 movesQueue.add(lastMove);
+                saveUpToDate = false;
                 board.printBoard();
                 printCommands();
             }
@@ -501,6 +597,7 @@ public class GameLogic {
                 moves.push(lastMove);
                 // store in the moves queue
                 movesQueue.add(lastMove);
+                saveUpToDate = false;
                 board.printBoard();
                 printCommands();
             }
