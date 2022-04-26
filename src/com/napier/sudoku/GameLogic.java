@@ -1,6 +1,7 @@
 package com.napier.sudoku;
 
 import java.io.*;
+import java.sql.Date;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -62,7 +63,7 @@ public class GameLogic {
                 }
                 break;
             case LOAD_GAME:
-                System.out.println("Loading a saved game");
+                int savesNumber = displaySaves();
                 break;
             case RULES:
                 printRules();
@@ -71,6 +72,33 @@ public class GameLogic {
                 System.out.println("An unexpected error occurred, please try again.");
                 break;
         }
+    }
+
+    private static int displaySaves() {
+        // open folder
+        File directory = new File(".\\saves");
+        File[] saves = directory.listFiles();
+        // check if saves is not empty
+        int saveCounter = 1;
+        if(saves != null) {
+            System.out.println("Enter the number of the game you want to load:");
+            // display each save
+            for(File save : saves) {
+                String name = save.getName().toString();
+                String noExtension = name.split("\\.")[0];
+                String[] split = noExtension.split("_");
+
+                DateTimeFormatter format = DateTimeFormatter.ofPattern("ddMMyyyyHHmm");
+                String date = split[0] + split[1];
+                LocalDateTime dateTime = LocalDateTime.parse(date, format);
+                DateTimeFormatter format2 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+                String display = saveCounter++ + " - Level: " + split[2] + ", " + "Date: " + dateTime.format(format2);
+
+                System.out.println(display);
+            }
+        }
+        return --saveCounter;
     }
 
     /**
@@ -149,8 +177,6 @@ public class GameLogic {
         movesQueue = new LinkedList<>();
         cluesUsed = 0;
         saveUpToDate = true;
-
-
 
         switch(gameDifficulty) {
             case 1:
@@ -274,10 +300,6 @@ public class GameLogic {
 
             }
         }
-    }
-
-    private static void deleteEmptySave() {
-
     }
 
     /**
