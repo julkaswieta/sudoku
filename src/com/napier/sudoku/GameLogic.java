@@ -73,6 +73,7 @@ public class GameLogic {
                 }
                 System.out.println("Save selected: " + choice);
                 loadSavedGame(choice);
+                playGame(scanner);
                 break;
             case RULES:
                 printRules();
@@ -109,10 +110,38 @@ public class GameLogic {
         movesQueue = new LinkedList<>();
         cluesUsed = 0;
         saveUpToDate = true;
+        save = saveSelected;
 
         // read in the boards
+        board.readInBoard(contents[0], 1);
+        board.readInBoard(contents[1], 2);
+        board.readInBoard(contents[2], 3);
 
+        // read in the moves
+        // check if not empty
 
+        if(!contents[3].isEmpty()) {
+            String[] movesSplit = contents[3].split(" ");
+            for(String move : movesSplit) {
+                moves.push(move);
+            }
+        }
+
+        if(!contents[4].isEmpty()) {
+            String[] undoneSplit = contents[4].split(" ");
+            for(String move : undoneSplit) {
+                undoneMoves.push(move);
+            }
+        }
+
+        if(!contents[5].isEmpty()) {
+            String[] queueSplit = contents[5].split(" ");
+            for(String move : queueSplit) {
+                movesQueue.add(move);
+            }
+        }
+
+        cluesUsed = Integer.valueOf(contents[6]);
     }
 
 
@@ -564,7 +593,6 @@ public class GameLogic {
         catch (Exception ex) {
             System.out.println("Could not print help instructions");
         }
-        board.printBoard();
         printCommands();
     }
 
