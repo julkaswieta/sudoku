@@ -27,6 +27,7 @@ public class GameLogic {
     private static boolean saveUpToDate;
     private static String difficultyLevel;
     private static File save;
+    private static File[] saves;
 
     /**
      * Driver code
@@ -64,6 +65,14 @@ public class GameLogic {
                 break;
             case LOAD_GAME:
                 int savesNumber = displaySaves();
+                boolean optionSelected = false;
+                int choice = -1;
+                choice = selectSave(scanner, savesNumber);
+                if(choice == 0) {
+                    break;
+                }
+                System.out.println("Save selected: " + choice);
+                loadSavedGame(choice);
                 break;
             case RULES:
                 printRules();
@@ -74,14 +83,84 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Loads the information from the save file selected to the program
+     * @param saveCode  code number of the save to load
+     */
+    private static void loadSavedGame(int saveCode) {
+        File saveSelected = saves[saveCode - 1];
+        String[] contents = new String[7];
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(saveSelected));
+            String line = null;
+            for(int i = 0; i < 7; i++) {
+                line = br.readLine();
+                contents[i] = line;
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Could not load the game.");
+        }
+
+        // initialise attributes
+        board = new Board();
+        moves = new Stack<>();
+        undoneMoves = new Stack<>();
+        movesQueue = new LinkedList<>();
+        cluesUsed = 0;
+        saveUpToDate = true;
+
+        // read in the boards
+
+
+    }
+
+
+
+    /**
+     * Asks the user to select the code number of the save to load
+     * @param scanner   Scanner to read user input
+     * @param savesNumber   number of save file in the saves folder
+     * @return  code number the user selected
+     */
+    private static int selectSave(Scanner scanner, int savesNumber) {
+        int choice = -1;
+        while(true) {
+            System.out.println("Select the game code you want to load: ");
+            try {
+                choice = scanner.nextInt();
+            }
+            catch(Exception ex) {
+                System.out.println("Please enter a valid option code");
+                scanner.next();
+                continue;
+            }
+            if(choice == 0) {
+                return choice;
+            }
+            else {
+                for(int i = 1; i <= savesNumber; i++) {
+                    if(i == choice) {
+                        return choice;
+                    }
+                }
+                System.out.println("Invalid code specified. Please try again.");
+            }
+        }
+    }
+
+    /**
+     * Reads in all game saves from the saves directory and displays them to the console to choose from
+     * @return  the number of saves read in
+     */
     private static int displaySaves() {
         // open folder
         File directory = new File(".\\saves");
-        File[] saves = directory.listFiles();
+        saves = directory.listFiles();
         // check if saves is not empty
         int saveCounter = 1;
         if(saves != null) {
-            System.out.println("Enter the number of the game you want to load:");
+            System.out.println("Game saves: ");
             // display each save
             for(File save : saves) {
                 String name = save.getName().toString();
@@ -97,6 +176,7 @@ public class GameLogic {
 
                 System.out.println(display);
             }
+            System.out.println("0 - Exit");
         }
         return --saveCounter;
     }
@@ -296,8 +376,6 @@ public class GameLogic {
                 else {
                     break;
                 }
-
-
             }
         }
     }
@@ -401,6 +479,7 @@ public class GameLogic {
                 else {
                     writer = new BufferedWriter(new FileWriter(save, true));
                     writer.write(board.originalToString());
+                    writer.newLine();
                 }
                 // get the data
                 ArrayList<String> output = new ArrayList<>();

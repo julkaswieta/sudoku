@@ -563,4 +563,25 @@ public class Board {
         }
         return string;
     }
+
+    public void readInBoard(String array, int boardCode) {
+        int[][] readIn;
+        // check which board it is
+        if(boardCode == 1) {
+            readIn = completeBoard;
+        }
+        else if(boardCode == 2) {
+            readIn = initialBoard;
+        }
+        else {
+            readIn = board;
+        }
+        String[] split = array.split(" ");
+        int iterator = 0;
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                readIn[i][j] = Integer.valueOf(split[iterator++]);
+            }
+        }
+    }
  }
