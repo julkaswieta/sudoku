@@ -11,6 +11,9 @@ public class Board {
     int rows;
     int emptyCells;
 
+    /**
+     * Constructor
+     */
     public Board() {
         this.columns = 9;
         this.rows = 9;
@@ -31,47 +34,22 @@ public class Board {
 
         // print the grid
         for (int i = 0; i < rows; i++) {
-            if(i % 3 == 0 && i != 0) {
+            if (i % 3 == 0 && i != 0) {
                 System.out.print("\n");
             }
             System.out.print(rowsCounter++ + "    ");  // print row number
 
             for (int j = 0; j < columns; j++) {
-                if(j % 3 == 0) {
+                if (j % 3 == 0) {
                     System.out.print("| ");
                 }
-                if(board[i][j] == 0) {
+                if (board[i][j] == 0) {
                     System.out.print("_ ");
-                }
-                else {
+                } else {
                     System.out.print(board[i][j] + " ");
                 }
             }
             System.out.print("|\n");
-        }
-    }
-
-    /**
-     * Helper function
-     */
-    public void printOriginal() {
-        for(int i = 0; i < rows; i++) {
-            for(int j = 0; j < columns; j++) {
-                System.out.print(completeBoard[i][j] + " ");
-            }
-            System.out.println();
-        }
-    }
-
-    /**
-     * Helper function
-     */
-    public void printInitial() {
-        for(int i = 0; i < rows; i++) {
-            for(int j = 0; j < columns; j++) {
-                System.out.print(initialBoard[i][j] + " ");
-            }
-            System.out.println();
         }
     }
 
@@ -87,11 +65,9 @@ public class Board {
             this.emptyCells = empty;
             generateSudoku();
             determineEmptyCells(empty);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Something went wrong. Please try again.");
         }
-
     }
 
     /**
@@ -106,11 +82,9 @@ public class Board {
             this.emptyCells = empty;
             generateSudoku();
             determineEmptyCells(empty);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Something went wrong. Please try again.");
         }
-
     }
 
     /**
@@ -125,15 +99,13 @@ public class Board {
             this.emptyCells = empty;
             generateSudoku();
             determineEmptyCells(empty);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Something went wrong. Please try again.");
         }
-
     }
 
     /**
-     * Generates a full sudoku board
+     * Generates a complete sudoku board
      */
     private void generateSudoku() {
         // initialise all possible values to be all possible
@@ -145,8 +117,7 @@ public class Board {
         // populate the cells by using backtracking algorithm to solve the board
         try {
             populateBoard();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             // print an error message if something goes wrong
             System.out.println("There was an error trying to generate a new sudoku board. Please try again");
         }
@@ -156,7 +127,6 @@ public class Board {
      * Backtracking method for populating the whole board
      */
     private boolean populateBoard() {
-        boolean solved = false;
         String cellLeft = cellsLeftToFill();
         // first, check if there are any cells left to fill
         if(cellLeft.isEmpty()) {
@@ -172,11 +142,11 @@ public class Board {
             String[] splitValues = values.split("");
             for (String value : splitValues) {
                 // check if it is safe to place the value there
-                if(isStepPossible(row, column, Integer.valueOf(value))) {
+                if(isStepPossible(row, column, Integer.parseInt(value))) {
                     // if safe, assign the value to the cell
-                    board[row][column] = Integer.valueOf(value);
-                    completeBoard[row][column] = Integer.valueOf(value);
-                    initialBoard[row][column] = Integer.valueOf(value);
+                    board[row][column] = Integer.parseInt(value);
+                    completeBoard[row][column] = Integer.parseInt(value);
+                    initialBoard[row][column] = Integer.parseInt(value);
                     if(populateBoard()) {
                         return true;
                     }
@@ -197,32 +167,13 @@ public class Board {
     }
 
     /**
-     * Returns coordinates of a first cell with the least possible values
-     * @return  String containing row and column coordinates
-     */
-    private String findCellWithLeastPossibles() {
-        String cellCoordinates = "";
-        int min = 10;
-        for (int r = 1; r <= 9; r++) {
-            for (int c = 1; c <= 9; c++) {
-                if (((board[c][r] == 0) && (possibleValues[c][r].length() < min))) {
-                    min = possibleValues[c][r].length();
-                    cellCoordinates += r + c;
-                }
-            }
-        }
-        return cellCoordinates;
-    }
-
-    /**
      * Returns the coordinates of the first cell left to fill or empty string if no empty cells left
      * @return  String with row and column coordinates or an empty string if no empty cells found
      */
     private String cellsLeftToFill() {
         String coordinates = "";
-        int row = -1;
-        int column = -1;
-        boolean cellsLeft = false;
+        int row;
+        int column;
         // look for at least one empty cell
         for(int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
@@ -230,7 +181,6 @@ public class Board {
                 if(board[i][j] == 0) {
                     row = i;
                     column = j;
-                    cellsLeft = true;
                     coordinates += row;
                     coordinates += column;
                     return coordinates;
@@ -241,16 +191,12 @@ public class Board {
     }
 
     /**
-     * Saves a move onto the steps stack
-     * @param stack stack to push the move onto
-     * @param row   row number of the cell
-     * @param column    column number of the cell
-     * @param value     value to save in the cell
+     * Determines if all conditions are met for the step to be possible
+     * @param row   row to check
+     * @param column    column to check
+     * @param value     value to check
+     * @return  if step possible
      */
-    private void saveStep(Stack stack, int row, int column, int value) {
-        stack.push(row + column + value);
-    }
-
     private boolean isStepPossible(int row, int column, int value) {
         if(isRowSafe(row, value)
                 && isColumnSafe(column, value)
@@ -326,8 +272,7 @@ public class Board {
      * @return  a String with shuffled values
      */
     private String randomizeValues(String possibleValues) {
-        String values = possibleValues;
-        List<String> splitValues = Arrays.asList(values.split(""));
+        List<String> splitValues = Arrays.asList(possibleValues.split(""));
         Collections.shuffle(splitValues, new Random());
         String shuffledValues = "";
         for (String value : splitValues) {
@@ -339,9 +284,8 @@ public class Board {
     /**
      * Generates a given number of empty cell coordinates and erases them from the board
      * @param emptyNumber   number of cells to empty
-     * @return  an array with the cells' coordinates
      */
-    private String[] determineEmptyCells(int emptyNumber) {
+    private void determineEmptyCells(int emptyNumber) {
         String[] emptyCells = new String[emptyNumber];
         Random rand = new Random();
         // determine half of the cells in the upper half of the board so that later it can be symmetrical
@@ -381,9 +325,12 @@ public class Board {
                 }
             }
         }
-        return emptyCells;
     }
 
+    /**
+     * Checks if the board is solved by looking for empty cells
+     * @return  if solved
+     */
     public boolean isSolved() {
         boolean solved = true;
         for(int i = 0; i < board.length; i++) {
@@ -458,36 +405,18 @@ public class Board {
         // count the numbers
         for(int i = 0; i < board.length; i++) {
             for(int j = 0; j < board.length; j++) {
-                switch(board[i][j]) {
-                    case 1:
-                        oneCount++;
-                        break;
-                    case 2:
-                        twoCount++;
-                        break;
-                    case 3:
-                        threeCount++;
-                        break;
-                    case 4:
-                        fourCount++;
-                        break;
-                    case 5:
-                        fiveCount++;
-                        break;
-                    case 6:
-                        sixCount++;
-                        break;
-                    case 7:
-                        sevenCount++;
-                        break;
-                    case 8:
-                        eightCount++;
-                        break;
-                    case 9:
-                        nineCount++;
-                        break;
-                    default:
-                        break;
+                switch (board[i][j]) {
+                    case 1 -> oneCount++;
+                    case 2 -> twoCount++;
+                    case 3 -> threeCount++;
+                    case 4 -> fourCount++;
+                    case 5 -> fiveCount++;
+                    case 6 -> sixCount++;
+                    case 7 -> sevenCount++;
+                    case 8 -> eightCount++;
+                    case 9 -> nineCount++;
+                    default -> {
+                    }
                 }
             }
         }
@@ -531,6 +460,10 @@ public class Board {
         board = getInitialBoard();
     }
 
+    /**
+     * Converts the completeBoard array to a String
+     * @return  String representation of the completeBoard array
+     */
     public String originalToString() {
         String board = "";
         for(int i = 0; i < rows; i++) {
@@ -542,6 +475,10 @@ public class Board {
         return board;
     }
 
+    /**
+     * Converts the initialBoard array to a String
+     * @return  String representation of the initialBoard array
+     */
     public String initialToString() {
         String board = "";
         for(int i = 0; i < rows; i++) {
@@ -553,6 +490,10 @@ public class Board {
         return board;
     }
 
+    /**
+     * Converts the board array to a String
+     * @return  String representation of the board array
+     */
     public String boardToString() {
         String string = "";
         for(int i = 0; i < rows; i++) {
@@ -564,6 +505,11 @@ public class Board {
         return string;
     }
 
+    /**
+     * Reads in a String representation of a board to the board array
+     * @param array String representation of a board
+     * @param boardCode board code (0 - complete, 1 - initial, 2 - board)
+     */
     public void readInBoard(String array, int boardCode) {
         int[][] readIn;
         // check which board it is
@@ -580,7 +526,7 @@ public class Board {
         int iterator = 0;
         for(int i = 0; i < rows; i++) {
             for(int j = 0; j < columns; j++) {
-                readIn[i][j] = Integer.valueOf(split[iterator++]);
+                readIn[i][j] = Integer.parseInt(split[iterator++]);
             }
         }
     }
