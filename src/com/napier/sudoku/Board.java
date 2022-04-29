@@ -457,7 +457,11 @@ public class Board {
      * Sets the playing board back to the initial board
      */
     public void startOver() {
-        board = getInitialBoard();
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < columns; j++) {
+                board[i][j] = initialBoard[i][j];
+            }
+        }
     }
 
     /**
@@ -508,7 +512,7 @@ public class Board {
     /**
      * Reads in a String representation of a board to the board array
      * @param array String representation of a board
-     * @param boardCode board code (0 - complete, 1 - initial, 2 - board)
+     * @param boardCode board code (1 - complete, 2 - initial, 3 - board)
      */
     public void readInBoard(String array, int boardCode) {
         int[][] readIn;
