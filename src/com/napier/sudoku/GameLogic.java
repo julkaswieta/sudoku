@@ -7,6 +7,8 @@ import java.util.*;
 
 /**
  * Main class with driver code for the game
+ * @author 40495101
+ * Last modified: 29/04/2022
  */
 public class GameLogic {
     // user action codes

@@ -2,6 +2,11 @@ package com.napier.sudoku;
 
 import java.util.*;
 
+/**
+ * Class representing a sudoku board
+ * @author 40495101
+ * Last modified: 29/04/2022
+ */
 public class Board {
     int[][] board; // 2D array to store the board to play
     int[][] completeBoard; // original board to compare against
